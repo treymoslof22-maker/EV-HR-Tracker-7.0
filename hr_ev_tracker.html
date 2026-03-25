@@ -466,6 +466,8 @@ const CLOUDFLARE_WORKER_URL = 'https://super-art-7372.treymoslof22.workers.dev/'
 const ODDS_API_KEY = 'e623af1dfef2189972eb71b0a7ebd797';
 const PUSHOVER_APP_TOKEN = 'az6pk9ipdjj11rqkz7x1kfi28f9ppk';
 const PUSHOVER_USER_KEY = 'u8s29a84uwrrtidoieqj1izetdeq59';
+const BETMGM_CDS_ACCESS_ID = 'OTU4NDk3MzEtOTAyNS00MjQzLWIxNWEtNTI2MjdhNWM3Zjk3';
+const BETMGM_CDS_SUBDIVISION = 'US-Colorado';
 const TRACKED_BOOKMAKERS = ['betmgm', 'fanduel', 'draftkings'];
 const SCRAPE_FALLBACK_BOOKMAKERS = ['fanduel', 'draftkings'];
 const HR_MARKET_KEYS = ['batter_home_runs', 'batter_home_runs_alternate'];
@@ -580,6 +582,118 @@ async function fetchWithRateLimitRetry(url, contextLabel, maxAttempts = 4) {
   throw new Error(`Odds API rate-limit retry failed${contextLabel ? ` for ${contextLabel}` : ''}: ${lastErrorText}`);
 }
 
+function extractBetmgmFixtureId(event = {}) {
+  const candidates = [
+    event?.fixtureId,
+    event?.fixture_id,
+    event?.id,
+    event?.event_id,
+    event?.metadata?.fixtureId
+  ];
+  const match = candidates
+    .map(v => String(v || ''))
+    .map(v => v.match(/\d{6,}/)?.[0] || '')
+    .find(Boolean);
+  return match || null;
+}
+
+function getFirstNumber(value) {
+  if (Number.isFinite(parseFloat(value))) return parseFloat(value);
+  const text = String(value || '');
+  const m = text.match(/-?\d+(\.\d+)?/);
+  return m ? parseFloat(m[0]) : null;
+}
+
+function flattenNodes(root) {
+  const out = [];
+  const stack = Array.isArray(root) ? [...root] : [root];
+  while (stack.length) {
+    const cur = stack.pop();
+    if (!cur || typeof cur !== 'object') continue;
+    out.push(cur);
+    for (const value of Object.values(cur)) {
+      if (Array.isArray(value)) stack.push(...value);
+      else if (value && typeof value === 'object') stack.push(value);
+    }
+  }
+  return out;
+}
+
+async function fetchBetmgmCdsFixtureOdds(fixtureId, fallbackAway = '', fallbackHome = '') {
+  if (!fixtureId) return null;
+  const url = new URL('https://www.co.betmgm.com/cds-api/bettingoffer/fixture-view');
+  url.searchParams.set('x-bwin-accessid', BETMGM_CDS_ACCESS_ID);
+  url.searchParams.set('lang', 'en-us');
+  url.searchParams.set('country', 'US');
+  url.searchParams.set('userCountry', 'US');
+  url.searchParams.set('subdivision', BETMGM_CDS_SUBDIVISION);
+  url.searchParams.set('offerMapping', 'All');
+  url.searchParams.set('scoreboardMode', 'Full');
+  url.searchParams.set('fixtureIds', fixtureId);
+  url.searchParams.set('state', 'Latest');
+  url.searchParams.set('includePrecreatedBetBuilder', 'true');
+  url.searchParams.set('supportVirtual', 'false');
+  url.searchParams.set('isBettingInsightsEnabled', 'true');
+  url.searchParams.set('useRegionalisedConfiguration', 'true');
+  url.searchParams.set('includeRelatedFixtures', 'false');
+  url.searchParams.set('statisticsModes', 'All');
+  url.searchParams.set('firstMarketGroupOnly', 'false');
+
+  const res = await fetch(url.toString());
+  if (!res.ok) throw new Error(`co.betmgm fixture-view ${res.status}`);
+  const payload = await res.json();
+  const allNodes = flattenNodes(payload);
+  const hrMarkets = allNodes.filter(n => {
+    const text = `${n?.name || ''} ${n?.description || ''} ${n?.title || ''}`.toLowerCase();
+    return /player\s+to\s+hit\s+a?\s+home\s+run/.test(text);
+  });
+
+  const parsedOutcomes = hrMarkets.flatMap(market => {
+    const candidates = [
+      ...(Array.isArray(market?.outcomes) ? market.outcomes : []),
+      ...(Array.isArray(market?.selections) ? market.selections : []),
+      ...(Array.isArray(market?.options) ? market.options : [])
+    ];
+    return candidates.map(sel => {
+      const price = getFirstNumber(
+        sel?.price?.american
+        ?? sel?.odds?.american
+        ?? sel?.price?.us
+        ?? sel?.odds
+        ?? sel?.americanOdds
+        ?? sel?.value
+      );
+      return {
+        name: sel?.name || sel?.label || 'Yes',
+        description: sel?.description || sel?.participant || sel?.name,
+        participant: sel?.participant || sel?.description || sel?.name,
+        point: Number.isFinite(parseFloat(sel?.line)) ? parseFloat(sel.line) : null,
+        price
+      };
+    }).filter(o => Number.isFinite(o.price) && isSingleHomeRunOutcome(o));
+  });
+
+  if (!parsedOutcomes.length) return null;
+
+  const fixtureNode = allNodes.find(n => String(n?.id || n?.fixtureId || '') === String(fixtureId)) || {};
+  const away = fixtureNode?.competitors?.[0]?.name || fixtureNode?.participants?.[0]?.name || fallbackAway;
+  const home = fixtureNode?.competitors?.[1]?.name || fixtureNode?.participants?.[1]?.name || fallbackHome;
+
+  return {
+    id: fixtureId,
+    away_team: away,
+    home_team: home,
+    bookmakers: [{
+      key: 'betmgm',
+      title: 'BetMGM Colorado',
+      markets: [{
+        key: 'batter_home_runs',
+        outcomes: parsedOutcomes
+      }]
+    }]
+  };
+}
+
 async function fetchBetmgmColoradoScrape() {
   const workerUrl = cfg('cfg-worker-url') || CLOUDFLARE_WORKER_URL;
   if (!workerUrl) return [];
@@ -593,7 +707,7 @@ async function fetchBetmgmColoradoScrape() {
     const payload = await res.json();
     const events = Array.isArray(payload?.events) ? payload.events : [];
 
-    return events
+    const baseEvents = events
       .map(event => ({
         id: event.id || `${event.away_team || 'away'}-${event.home_team || 'home'}`,
         away_team: event.away_team,
@@ -619,6 +733,33 @@ async function fetchBetmgmColoradoScrape() {
           }))
       }))
       .filter(event => event.bookmakers.length > 0);
+
+    const enrichedEvents = [];
+    for (const event of baseEvents) {
+      const fixtureId = extractBetmgmFixtureId(event);
+      if (!fixtureId) {
+        enrichedEvents.push(event);
+        continue;
+      }
+
+      try {
+        const cdsEvent = await fetchBetmgmCdsFixtureOdds(fixtureId, event.away_team, event.home_team);
+        if (cdsEvent?.bookmakers?.length) {
+          enrichedEvents.push(cdsEvent);
+          log(`Loaded co.betmgm fixture-view odds for fixture ${fixtureId}.`, 'info');
+        } else {
+          enrichedEvents.push(event);
+          log(`No fixture-view HR outcomes for fixture ${fixtureId}; using scrape fallback.`, 'info');
+        }
+      } catch (fixtureErr) {
+        enrichedEvents.push(event);
+        log(`co.betmgm fixture-view failed for fixture ${fixtureId}: ${fixtureErr.message}`, 'error');
+      }
+
+      await sleep(120);
+    }
+
+    return enrichedEvents;
   } catch (e) {
     log(`BetMGM CO scrape failed: ${e.message}`, 'error');
     return [];
