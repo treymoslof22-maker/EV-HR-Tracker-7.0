@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HR +EV Tracker — BetMGM Colorado</title>
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #161920;
+    --surface2: #1e2230;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f0f2f8;
+    --muted: #7a8099;
+    --accent: #3df0a0;
+    --accent-dim: rgba(61,240,160,0.12);
+    --accent-dim2: rgba(61,240,160,0.22);
+    --danger: #ff5c5c;
+    --danger-dim: rgba(255,92,92,0.12);
+    --warn: #f0a93d;
+    --warn-dim: rgba(240,169,61,0.12);
+    --info: #3d9cf0;
+    --info-dim: rgba(61,156,240,0.12);
+    --radius: 10px;
+    --font: 'Inter', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-icon {
+    width: 28px; height: 28px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px; color: #0d0f14;
+  }
+  .logo-text { font-weight: 700; font-size: 15px; letter-spacing: -0.3px; }
+  .logo-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+  .status-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s infinite;
+    display: inline-block; margin-right: 6px;
+  }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }
+  .status-label { font-size: 12px; color: var(--muted); }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 20px; }
+
+  .notice {
+    background: var(--warn-dim);
+    border: 1px solid rgba(240,169,61,0.3);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--warn);
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+  .notice strong { font-weight: 600; }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 700px) { .grid-3 { grid-template-columns: 1fr; } }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 6px; }
+  .stat-val { font-family: 'Space Mono', monospace; font-size: 26px; font-weight: 700; }
+  .stat-val.green { color: var(--accent); }
+  .stat-val.red { color: var(--danger); }
+  .stat-val.blue { color: var(--info); }
+  .stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  .section { margin-bottom: 28px; }
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .section-title { font-size: 13px; font-weight: 600; letter-spacing: .3px; color: var(--muted); text-transform: uppercase; }
+
+  .config-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .config-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 600px) { .config-grid { grid-template-columns: 1fr; } }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 12px; color: var(--muted); font-weight: 500; }
+  .field input, .field select {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 7px;
+    color: var(--text);
+    font-size: 13px;
+    padding: 9px 12px;
+    outline: none;
+    width: 100%;
+    transition: border-color .15s;
+  }
+  .field input:focus, .field select:focus { border-color: var(--accent); }
+  .field input::placeholder { color: var(--muted); }
+  .field select option { background: #1e2230; }
+
+  .row-btns {
+    display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap;
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 18px; border-radius: 7px; font-size: 13px; font-weight: 600;
+    cursor: pointer; border: none; transition: all .15s;
+  }
+  .btn-primary { background: var(--accent); color: #0d0f14; }
+  .btn-primary:hover { filter: brightness(1.1); }
+  .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+  .btn-outline {
+    background: transparent; color: var(--text);
+    border: 1px solid var(--border2);
+  }
+  .btn-outline:hover { background: var(--surface2); }
+  .btn-danger { background: var(--danger-dim); color: var(--danger); border: 1px solid rgba(255,92,92,.25); }
+  .btn-danger:hover { background: rgba(255,92,92,0.22); }
+
+  .spinner {
+    width: 14px; height: 14px; border: 2px solid rgba(0,0,0,.3);
+    border-top-color: #0d0f14;
+    border-radius: 50%; animation: spin .6s linear infinite;
+    display: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .btn.loading .spinner { display: block; }
+  .btn.loading .btn-label { display: none; }
+
+  .bet-table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .bet-table { width: 100%; border-collapse: collapse; }
+  .bet-table th {
+    background: var(--surface2);
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 500;
+  }
+  .bet-table td {
+    padding: 11px 14px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .bet-table tr:hover td { background: rgba(255,255,255,0.025); }
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;
+  }
+  .badge-green { background: var(--accent-dim); color: var(--accent); }
+  .badge-red { background: var(--danger-dim); color: var(--danger); }
+  .badge-blue { background: var(--info-dim); color: var(--info); }
+  .badge-warn { background: var(--warn-dim); color: var(--warn); }
+
+  .ev-val { font-family: 'Space Mono', monospace; font-weight: 700; }
+  .ev-pos { color: var(--accent); }
+  .ev-neg { color: var(--danger); }
+
+  .empty-state {
+    text-align: center; padding: 48px 24px; color: var(--muted);
+  }
+  .empty-state .icon { font-size: 32px; margin-bottom: 10px; }
+  .empty-state p { font-size: 13px; }
+
+  .alert-log {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    max-height: 240px;
+    overflow-y: auto;
+  }
+  .log-entry {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .log-entry:last-child { border-bottom: none; }
+  .log-time { color: var(--muted); white-space: nowrap; font-family: 'Space Mono', monospace; font-size: 11px; }
+  .log-msg { flex: 1; }
+  .log-msg.success { color: var(--accent); }
+  .log-msg.error { color: var(--danger); }
+  .log-msg.info { color: var(--info); }
+
+  .countdown {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px; color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 5px; padding: 3px 8px;
+  }
+
+  .tag-betmgm {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 700;
+    background: rgba(225,180,0,0.15); color: #f5c842;
+    padding: 2px 7px; border-radius: 4px;
+  }
+
+  .odds-chip {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px; font-weight: 700;
+    padding: 2px 7px; border-radius: 4px;
+    background: var(--surface2);
+  }
+  .odds-plus { color: var(--accent); }
+  .odds-minus { color: var(--danger); }
+  .book-odds-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .book-odd {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    font-size: 11px;
+  }
+  .book-odd .book-name { color: var(--muted); font-weight: 600; }
+  .book-odd.best {
+    border-color: rgba(61,240,160,0.4);
+    background: var(--accent-dim);
+    box-shadow: inset 0 0 0 1px rgba(61,240,160,0.22);
+  }
+
+  .tabs {
+    display: flex; gap: 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .tab {
+    padding: 8px 16px; font-size: 13px; font-weight: 500;
+    color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent;
+    transition: all .15s; user-select: none;
+    margin-bottom: -1px;
+  }
+  .tab.active { color: var(--text); border-bottom-color: var(--accent); }
+
+  .section-divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">HR</div>
+    <div>
+      <div class="logo-text">HR +EV Tracker</div>
+      <div class="logo-sub">BetMGM Colorado · Home Run Props</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px;">
+    <span id="status-display" style="display:flex;align-items:center;font-size:12px;color:var(--muted);">
+      <span class="status-dot" style="background:var(--muted);"></span> Idle
+    </span>
+    <span class="countdown" id="countdown" style="display:none;">Next scan: --</span>
+  </div>
+</header>
+
+<main>
+
+  <div class="notice">
+    <strong>Setup required:</strong> Enter your <a href="https://the-odds-api.com" target="_blank" style="color:var(--warn);">Odds API key</a> (free tier: 500 requests/month) and your <a href="https://pushover.net" target="_blank" style="color:var(--warn);">Pushover</a> User Key + App Token below. The tracker will poll MLB home run props every N minutes, calculate +EV vs. the market consensus line, and push an alert to your phone whenever BetMGM Colorado offers +EV above your threshold.
+  </div>
+
+  <div class="grid-3">
+    <div class="stat-card">
+      <div class="stat-label">+EV Bets Found</div>
+      <div class="stat-val green" id="stat-ev">0</div>
+      <div class="stat-sub">this session</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Alerts Sent</div>
+      <div class="stat-val blue" id="stat-alerts">0</div>
+      <div class="stat-sub">Pushover notifications</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">API Requests</div>
+      <div class="stat-val" id="stat-reqs">0</div>
+      <div class="stat-sub" id="stat-remaining">— remaining this month</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Configuration</span>
+    </div>
+    <div class="config-card">
+      <div class="config-grid">
+        <div class="field">
+          <label>Odds API Key</label>
+          <input type="password" id="cfg-odds-key" value="91ec431ed0b88f3d8e48b719db1ae368" autocomplete="off" readonly>
+        </div>
+        <div class="field">
+          <label>Pushover User Key</label>
+          <input type="password" id="cfg-push-user" value="u8s29a84uwrrtidoieqj1izetdeq59" autocomplete="off" readonly>
+        </div>
+        <div class="field">
+          <label>Pushover App Token</label>
+          <input type="password" id="cfg-push-token" value="az6pk9ipdjj11rqkz7x1kfi28f9ppk" autocomplete="off" readonly>
+        </div>
+        <div class="field" style="grid-column: 1 / -1;">
+          <label>Cloudflare Worker Proxy URL</label>
+          <input type="text" id="cfg-worker-url" value="https://super-art-7372.treymoslof22.workers.dev/" autocomplete="off" readonly>
+        </div>
+        <div class="field">
+          <label>+EV Alert Threshold (%)</label>
+          <input type="number" id="cfg-threshold" value="30" min="0" max="30" step="0.5">
+        </div>
+        <div class="field">
+          <label>Poll Interval (minutes)</label>
+          <select id="cfg-interval">
+            <option value="5">Every 5 minutes</option>
+            <option value="10" selected>Every 10 minutes</option>
+            <option value="15">Every 15 minutes</option>
+            <option value="30">Every 30 minutes</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Minimum Odds (American)</label>
+          <input type="number" id="cfg-min-odds" value="-150" step="5" placeholder="-150">
+        </div>
+      </div>
+      <div class="row-btns">
+        <button class="btn btn-primary" id="btn-start" onclick="startTracker()">
+          <span class="spinner"></span>
+          <span class="btn-label">▶ Start Tracker</span>
+        </button>
+        <button class="btn btn-danger" id="btn-stop" onclick="stopTracker()" disabled>
+          ■ Stop
+        </button>
+        <button class="btn btn-outline" onclick="runOnceScan()">
+          ⟳ Scan Now
+        </button>
+        <button class="btn btn-outline" onclick="testPushover()">
+          ✉ Test Alert
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Live +EV Opportunities</span>
+      <span style="font-size:12px;color:var(--muted);" id="last-scan">Not yet scanned</span>
+    </div>
+    <div class="bet-table-wrap">
+      <table class="bet-table" id="ev-table">
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>Game</th>
+            <th>Sportsbook Odds</th>
+            <th>BetMGM Odds</th>
+            <th>Market Avg</th>
+            <th>BetMGM Implied</th>
+            <th>True Prob</th>
+            <th>EV%</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="ev-tbody">
+          <tr>
+            <td colspan="9">
+              <div class="empty-state">
+                <div class="icon">⚾</div>
+                <p>Run a scan to see live home run prop odds from BetMGM Colorado.</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Alert Log</span>
+      <button class="btn btn-outline" style="padding:5px 10px;font-size:11px;" onclick="clearLog()">Clear</button>
+    </div>
+    <div class="alert-log" id="alert-log">
+      <div class="log-entry">
+        <span class="log-time">--:--:--</span>
+        <span class="log-msg info">Tracker ready. Configure your API keys and click Start.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">How EV is Calculated</span>
+    </div>
+    <div class="config-card" style="font-size:13px;color:var(--muted);line-height:1.8;">
+      <p style="margin-bottom:10px;"><strong style="color:var(--text);">Step 1 — Consensus "true probability":</strong> We fetch HR To Score (anytime) props from all available sportsbooks via The Odds API. We remove vig from each book's line using the standard no-vig formula, then average those probabilities across all non-BetMGM books to get a market consensus true probability.</p>
+      <p style="margin-bottom:10px;"><strong style="color:var(--text);">Step 2 — BetMGM implied probability:</strong> We take BetMGM Colorado's raw American odds and convert them to implied probability (without removing vig).</p>
+      <p style="margin-bottom:10px;"><strong style="color:var(--text);">Step 3 — EV% formula:</strong> <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;color:var(--accent);">EV% = (TrueProb × Payout) − (1 − TrueProb)</code> where Payout is the decimal payout from BetMGM's line (e.g. +200 → 2.0x).</p>
+      <p><strong style="color:var(--text);">Step 4 — Alert:</strong> If EV% ≥ your threshold, a Pushover notification is sent to your phone with the player, odds, and EV%.</p>
+    </div>
+  </div>
+
+</main>
+
+<script>
+let scanInterval = null;
+let countdownTimer = null;
+let countdownSecs = 0;
+let sessionEvCount = 0;
+let sessionAlerts = 0;
+let sessionReqs = 0;
+let lastAlertedKeys = new Set();
+const CLOUDFLARE_WORKER_URL = 'https://super-art-7372.treymoslof22.workers.dev/';
+const ODDS_API_KEY = '91ec431ed0b88f3d8e48b719db1ae368';
+const PUSHOVER_APP_TOKEN = 'az6pk9ipdjj11rqkz7x1kfi28f9ppk';
+const PUSHOVER_USER_KEY = 'u8s29a84uwrrtidoieqj1izetdeq59';
+const TRACKED_BOOKMAKERS = ['betmgm', 'fanduel', 'draftkings'];
+const SCRAPE_FALLBACK_BOOKMAKERS = ['fanduel', 'draftkings'];
+const HR_MARKET_KEYS = ['batter_home_runs', 'batter_home_runs_alternate'];
+
+function normalizeBookKey(book) {
+  const raw = `${book?.key || ''} ${book?.title || ''}`.toLowerCase();
+  if (raw.includes('fanduel')) return 'fanduel';
+  if (raw.includes('draftkings')) return 'draftkings';
+  if (raw.includes('fanatics')) return 'fanatics';
+  if (raw.includes('hard rock') || raw.includes('hardrock')) return 'hardrockbet';
+  if (raw.includes('betmgm')) return 'betmgm';
+  return (book?.key || '').toLowerCase();
+}
+
+function isTrackedBook(book) {
+  return TRACKED_BOOKMAKERS.includes(normalizeBookKey(book));
+}
+
+function matchupKey(awayTeam, homeTeam) {
+  return `${(awayTeam || '').toLowerCase().trim()}@@${(homeTeam || '').toLowerCase().trim()}`;
+}
+
+function isSingleHomeRunOutcome(outcome) {
+  const point = parseFloat(outcome?.point);
+  if (Number.isFinite(point)) return point <= 0.5;
+
+  const text = `${outcome?.name || ''} ${outcome?.description || ''} ${outcome?.label || ''}`.toLowerCase();
+  if (/\b[2-9]\+\b/.test(text)) return false;
+  if (/(over|under)\s*[1-9]\.5/.test(text)) return false;
+  return true;
+}
+
+function cfg(id) { return document.getElementById(id).value.trim(); }
+document.getElementById('cfg-worker-url').value = CLOUDFLARE_WORKER_URL;
+document.getElementById('cfg-odds-key').value = ODDS_API_KEY;
+document.getElementById('cfg-push-token').value = PUSHOVER_APP_TOKEN;
+document.getElementById('cfg-push-user').value = PUSHOVER_USER_KEY;
+
+function log(msg, type='info') {
+  const el = document.getElementById('alert-log');
+  const now = new Date().toTimeString().slice(0,8);
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.innerHTML = `<span class="log-time">${now}</span><span class="log-msg ${type}">${msg}</span>`;
+  el.insertBefore(entry, el.firstChild);
+  if (el.children.length > 80) el.removeChild(el.lastChild);
+}
+
+function clearLog() {
+  document.getElementById('alert-log').innerHTML = '';
+}
+
+function updateStatus(text, active) {
+  const el = document.getElementById('status-display');
+  const dot = el.querySelector('.status-dot') || document.createElement('span');
+  dot.className = 'status-dot';
+  dot.style.background = active ? 'var(--accent)' : 'var(--muted)';
+  el.innerHTML = '';
+  el.appendChild(dot);
+  el.appendChild(document.createTextNode(' ' + text));
+}
+
+function americanToDecimal(odds) {
+  odds = parseFloat(odds);
+  if (odds > 0) return 1 + odds / 100;
+  return 1 + 100 / Math.abs(odds);
+}
+
+function americanToImplied(odds) {
+  odds = parseFloat(odds);
+  if (odds > 0) return 100 / (odds + 100);
+  return Math.abs(odds) / (Math.abs(odds) + 100);
+}
+
+function noVigProb(homeOdds, awayOdds) {
+  const rawH = americanToImplied(homeOdds);
+  const rawA = americanToImplied(awayOdds);
+  const total = rawH + rawA;
+  return rawH / total;
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function fetchWithRateLimitRetry(url, contextLabel, maxAttempts = 4) {
+  let lastErrorText = '';
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const res = await fetch(url);
+    if (res.ok) return res;
+
+    lastErrorText = await res.text();
+    const isRateLimit = res.status === 429;
+    if (!isRateLimit || attempt === maxAttempts) {
+      throw new Error(`Odds API error ${res.status}${contextLabel ? ` for ${contextLabel}` : ''}: ${lastErrorText}`);
+    }
+
+    const retryDelayMs = Math.min(6000, 1200 * attempt);
+    log(`Rate-limited on ${contextLabel || 'request'} (attempt ${attempt}/${maxAttempts}). Retrying in ${(retryDelayMs / 1000).toFixed(1)}s...`, 'error');
+    await sleep(retryDelayMs);
+  }
+
+  throw new Error(`Odds API rate-limit retry failed${contextLabel ? ` for ${contextLabel}` : ''}: ${lastErrorText}`);
+}
+
+async function fetchBetmgmColoradoScrape() {
+  const workerUrl = cfg('cfg-worker-url') || CLOUDFLARE_WORKER_URL;
+  if (!workerUrl) return [];
+
+  const url = new URL(workerUrl);
+  url.searchParams.set('action', 'scrape_betmgm_co_hr');
+
+  try {
+    const res = await fetch(url.toString());
+    if (!res.ok) return [];
+    const payload = await res.json();
+    const events = Array.isArray(payload?.events) ? payload.events : [];
+
+    return events
+      .map(event => ({
+        id: event.id || `${event.away_team || 'away'}-${event.home_team || 'home'}`,
+        away_team: event.away_team,
+        home_team: event.home_team,
+        bookmakers: (event.bookmakers || [])
+          .filter(book => normalizeBookKey(book) === 'betmgm')
+          .map(book => ({
+            key: 'betmgm',
+            title: book.title || 'BetMGM Colorado',
+            markets: (book.markets || [])
+              .filter(m => HR_MARKET_KEYS.includes(m?.key))
+              .map(m => ({
+                key: m.key,
+                outcomes: (m.outcomes || []).map(o => ({
+                  name: o.name,
+                  description: o.description,
+                  participant: o.participant,
+                  point: Number.isFinite(parseFloat(o.point)) ? parseFloat(o.point) : null,
+                  price: parseFloat(o.price)
+                })).filter(o => Number.isFinite(o.price) && isSingleHomeRunOutcome(o))
+              }))
+              .filter(m => m.outcomes.length > 0)
+          }))
+      }))
+      .filter(event => event.bookmakers.length > 0);
+  } catch (e) {
+    log(`BetMGM CO scrape failed: ${e.message}`, 'error');
+    return [];
+  }
+}
+
+async function fetchScrapedBookmakerFallback(eventId) {
+  const workerUrl = cfg('cfg-worker-url') || CLOUDFLARE_WORKER_URL;
+  if (!workerUrl) return [];
+
+  const url = new URL(workerUrl);
+  url.searchParams.set('action', 'scrape_hr_props');
+  url.searchParams.set('eventId', eventId);
+  url.searchParams.set('books', SCRAPE_FALLBACK_BOOKMAKERS.join(','));
+
+  try {
+    const res = await fetch(url.toString());
+    if (!res.ok) return [];
+    const payload = await res.json();
+    const books = Array.isArray(payload?.bookmakers) ? payload.bookmakers : [];
+
+    return books
+      .filter(book => SCRAPE_FALLBACK_BOOKMAKERS.includes(normalizeBookKey(book)))
+      .map(book => ({
+        key: normalizeBookKey(book),
+        title: book.title || book.key,
+        markets: (book.markets || [])
+          .filter(m => HR_MARKET_KEYS.includes(m?.key))
+          .map(m => ({
+            key: m.key,
+            outcomes: (m.outcomes || []).map(o => ({
+              name: o.name,
+              description: o.description,
+              participant: o.participant,
+              point: Number.isFinite(parseFloat(o.point)) ? parseFloat(o.point) : null,
+              price: parseFloat(o.price)
+            })).filter(o => Number.isFinite(o.price) && isSingleHomeRunOutcome(o))
+          }))
+          .filter(m => m.outcomes.length > 0)
+      }))
+      .filter(book => book.markets.length > 0);
+  } catch (e) {
+    log(`FD/DK scrape fallback failed for event ${eventId}: ${e.message}`, 'error');
+    return [];
+  }
+}
+
+async function fetchHROdds() {
+  const key = ODDS_API_KEY;
+  const scrapedBetmgmEvents = await fetchBetmgmColoradoScrape();
+  const betmgmScrapeByMatchup = new Map(
+    scrapedBetmgmEvents.map(event => [matchupKey(event.away_team, event.home_team), event])
+  );
+  
+  const sport = 'baseball_mlb';
+  const market = HR_MARKET_KEYS.join(',');
+  const region = 'us';
+  const oddsFormat = 'american';
+  
+  const eventsUrl = `https://api.the-odds-api.com/v4/sports/${sport}/events/?apiKey=${key}`;
+
+  const eventsRes = await fetchWithRateLimitRetry(eventsUrl, 'events list');
+
+  sessionReqs++;
+
+  const eventsRemaining = eventsRes.headers.get('x-requests-remaining');
+  if (eventsRemaining) {
+    document.getElementById('stat-remaining').textContent = `${eventsRemaining} requests remaining`;
+  }
+
+  const events = await eventsRes.json();
+  const eventOddsPayloads = [];
+
+  for (const event of events) {
+    const eventOddsUrl = `https://api.the-odds-api.com/v4/sports/${sport}/events/${event.id}/odds/?apiKey=${key}&regions=${region}&markets=${market}&oddsFormat=${oddsFormat}&bookmakers=betmgm,fanduel,draftkings`;
+    const eventOddsRes = await fetchWithRateLimitRetry(eventOddsUrl, `event ${event.id}`);
+
+    sessionReqs++;
+
+    const oddsRemaining = eventOddsRes.headers.get('x-requests-remaining');
+    if (oddsRemaining) {
+      document.getElementById('stat-remaining').textContent = `${oddsRemaining} requests remaining`;
+    }
+
+    const eventOdds = await eventOddsRes.json();
+    eventOdds.bookmakers = (eventOdds.bookmakers || []).filter(isTrackedBook);
+
+    const hasBetmgm = eventOdds.bookmakers.some(b => normalizeBookKey(b) === 'betmgm');
+    if (!hasBetmgm) {
+      const scrapedMatch = betmgmScrapeByMatchup.get(matchupKey(eventOdds.away_team, eventOdds.home_team));
+      if (scrapedMatch?.bookmakers?.length) {
+        eventOdds.bookmakers = [...eventOdds.bookmakers, ...scrapedMatch.bookmakers];
+        log(`Added co.betmgm scraped odds for ${eventOdds.away_team} @ ${eventOdds.home_team}.`, 'info');
+      }
+    }
+
+    const missingFallbackBooks = SCRAPE_FALLBACK_BOOKMAKERS.filter(bookKey =>
+      !eventOdds.bookmakers.some(b => normalizeBookKey(b) === bookKey)
+    );
+    if (missingFallbackBooks.length > 0) {
+      const scrapedFallbackBooks = await fetchScrapedBookmakerFallback(event.id);
+      if (scrapedFallbackBooks.length > 0) {
+        eventOdds.bookmakers = [...eventOdds.bookmakers, ...scrapedFallbackBooks];
+        log(`Added scraped fallback odds for ${missingFallbackBooks.join(', ')} on event ${event.id}.`, 'info');
+      }
+    }
+
+    if (eventOdds?.bookmakers?.length) {
+      eventOddsPayloads.push(eventOdds);
+    }
+
+    await sleep(120);
+  }
+
+  if (eventOddsPayloads.length === 0 && scrapedBetmgmEvents.length > 0) {
+    log('Odds API returned no tracked books; using co.betmgm scraped events only.', 'info');
+    return scrapedBetmgmEvents;
+  }
+
+  document.getElementById('stat-reqs').textContent = sessionReqs;
+
+  return eventOddsPayloads;
+}
+
+function calcEV(betmgmOdds, trueProb) {
+  const decimal = americanToDecimal(betmgmOdds);
+  const payout = decimal - 1;
+  return trueProb * payout - (1 - trueProb);
+}
+
+function formatAmerican(odds) {
+  odds = parseFloat(odds);
+  const cls = odds > 0 ? 'odds-plus' : 'odds-minus';
+  const str = odds > 0 ? `+${odds}` : `${odds}`;
+  return `<span class="odds-chip ${cls}">${str}</span>`;
+}
+
+function renderSportsbookOdds(oddsByBook = [], bestOdds = null) {
+  if (!oddsByBook.length) return '<span style="color:var(--muted);">—</span>';
+
+  return `<div class="book-odds-list">${oddsByBook.map(bookOdd => {
+    const isBest = Number.isFinite(bestOdds) && bookOdd.odds === bestOdds;
+    return `<span class="book-odd ${isBest ? 'best' : ''}">
+      <span class="book-name">${bookOdd.book}</span>
+      ${formatAmerican(bookOdd.odds)}
+    </span>`;
+  }).join('')}</div>`;
+}
+
+function normalizePlayerKey(label) {
+  return (label || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\b(to\s+hit\s+a?\s*home\s*run|to\s+homer|to\s+record\s+a?\s*home\s*run|home\s*runs?|home\s*run)\b/g, ' ')
+    .replace(/\b(yes|no|over|under|ou|o\/u|alt|alternate)\b/g, ' ')
+    .replace(/\b\d+(\.\d+)?\+?\b/g, ' ')
+    .replace(/[.'’`-]/g, '')
+    .replace(/\b(jr|sr|ii|iii|iv|v)\b/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function playerKeysMatch(a, b) {
+  if (!a || !b) return false;
+  if (a === b) return true;
+
+  const aTokens = a.split(' ').filter(t => t.length > 1);
+  const bTokens = b.split(' ').filter(t => t.length > 1);
+  if (!aTokens.length || !bTokens.length) return false;
+
+  const overlap = aTokens.filter(t => bTokens.includes(t)).length;
+  const minLen = Math.min(aTokens.length, bTokens.length);
+  return overlap >= minLen;
+}
+
+function getOutcomePlayerLabel(outcome) {
+  const genericNames = new Set(['yes', 'no', 'over', 'under']);
+  const name = (outcome?.name || '').trim();
+  const candidates = [outcome?.description, outcome?.participant];
+  if (name && !genericNames.has(name.toLowerCase())) candidates.push(name);
+  const firstValid = candidates.find(v => (v || '').trim().length > 0);
+  return (firstValid || name || 'Unknown').trim();
+}
+
+function getOutcomeSide(outcome) {
+  const side = (outcome?.name || '').trim().toLowerCase();
+  if (side === 'yes' || side === 'over') return 'yes';
+  if (side === 'no' || side === 'under') return 'no';
+  return null;
+}
+
+async function sendPushover(title, message) {
+  const workerUrl = CLOUDFLARE_WORKER_URL;
+  const userKey = PUSHOVER_USER_KEY;
+  const token = PUSHOVER_APP_TOKEN;
+  if (!userKey || !token) {
+    log('Pushover keys not set — skipping notification.', 'error');
+    return false;
+  }
+  
+  const body = new URLSearchParams({
+    token, user: userKey, title, message, priority: '1', sound: 'cashregister'
+  });
+
+  try {
+    const res = await fetch(workerUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString()
+    });
+    const json = await res.json();
+    if (json.status === 1) {
+      sessionAlerts++;
+      document.getElementById('stat-alerts').textContent = sessionAlerts;
+      log(`📱 Pushover alert sent: ${title}`, 'success');
+      return true;
+    } else {
+      log(`Pushover error: ${json.errors?.join(', ')}`, 'error');
+      return false;
+    }
+  } catch(e) {
+    log(`Pushover failed: ${e.message}`, 'error');
+    return false;
+  }
+}
+
+async function testPushover() {
+  log('Sending test Pushover notification...', 'info');
+  await sendPushover(
+    '⚾ HR +EV Tracker — Test',
+    'Your HR +EV Tracker is working correctly. You will receive alerts like this when BetMGM Colorado offers +EV home run props.'
+  );
+}
+
+async function runScan() {
+  const threshold = parseFloat(cfg('cfg-threshold')) / 100;
+  const minOdds = parseFloat(cfg('cfg-min-odds'));
+  const highlightThresholdPct = 30;
+  
+  updateStatus('Scanning...', true);
+  log('Fetching MLB HR prop odds...', 'info');
+  
+  let games;
+  try {
+    games = await fetchHROdds();
+  } catch(e) {
+    log(`Fetch error: ${e.message}`, 'error');
+    updateStatus('Error — check API key', false);
+    return;
+  }
+  
+  log(`Fetched ${games.length} games with HR props.`, 'info');
+  
+  const evBets = [];
+  
+  for (const game of games) {
+    const betmgmBook = game.bookmakers?.find(b =>
+      b.key === 'betmgm' || b.title?.toLowerCase().includes('betmgm')
+    );
+    if (!betmgmBook) continue;
+    
+    const otherBooks = game.bookmakers?.filter(b =>
+      b.key !== 'betmgm' && !b.title?.toLowerCase().includes('betmgm')
+    ) || [];
+    
+    const hrMarketsBetMGM = betmgmBook.markets?.filter(m => HR_MARKET_KEYS.includes(m.key)) || [];
+    if (!hrMarketsBetMGM.length) continue;
+    
+    for (const outcome of hrMarketsBetMGM.flatMap(m => m.outcomes || []).filter(isSingleHomeRunOutcome)) {
+      const playerName = getOutcomePlayerLabel(outcome);
+      const targetPlayerKey = normalizePlayerKey(playerName);
+      const targetSide = getOutcomeSide(outcome);
+      const betmgmOdds = parseFloat(outcome.price);
+      const oddsByBook = [{
+        key: 'betmgm',
+        book: 'BetMGM',
+        odds: betmgmOdds
+      }];
+
+      if (!targetPlayerKey) continue;
+      
+      if (betmgmOdds < minOdds) continue;
+      
+      const marketProbs = [];
+      for (const book of otherBooks) {
+        const candidateOutcomes = (book.markets || [])
+          .filter(m => HR_MARKET_KEYS.includes(m.key))
+          .flatMap(m => m.outcomes || [])
+          .filter(isSingleHomeRunOutcome);
+        if (!candidateOutcomes.length) continue;
+
+        const matches = candidateOutcomes.filter(x => {
+          const bookPlayerKey = normalizePlayerKey(getOutcomePlayerLabel(x));
+          if (!bookPlayerKey || !playerKeysMatch(bookPlayerKey, targetPlayerKey)) return false;
+
+          const bookSide = getOutcomeSide(x);
+          if (targetSide && bookSide && targetSide !== bookSide) return false;
+          return true;
+        });
+        const o = matches.reduce((best, x) => {
+          const price = parseFloat(x.price);
+          if (!Number.isFinite(price)) return best;
+          if (!best) return x;
+          return price > parseFloat(best.price) ? x : best;
+        }, null);
+
+        if (o) {
+          const matchedOdds = parseFloat(o.price);
+          const imp = americanToImplied(matchedOdds);
+          marketProbs.push(imp);
+          oddsByBook.push({
+            key: normalizeBookKey(book),
+            book: book.title || book.key || 'Book',
+            odds: matchedOdds
+          });
+        }
+      }
+
+      const bestOdds = oddsByBook.reduce((best, entry) => {
+        if (!Number.isFinite(entry.odds)) return best;
+        if (!Number.isFinite(best)) return entry.odds;
+        return entry.odds > best ? entry.odds : best;
+      }, Number.NEGATIVE_INFINITY);
+
+      let trueProb = null;
+      let evPct = null;
+      let marketAvgOdds = null;
+
+      if (marketProbs.length >= 2) {
+        const avgVigProb = marketProbs.reduce((a, b) => a + b, 0) / marketProbs.length;
+        trueProb = avgVigProb / (1 + (avgVigProb - 0.5) * 0.05);
+        const ev = calcEV(betmgmOdds, trueProb);
+        evPct = ev * 100;
+
+        const avgImp = marketProbs.reduce((a,b)=>a+b,0)/marketProbs.length;
+        if (avgImp > 0) {
+          marketAvgOdds = Math.round(avgImp >= 0.5
+            ? -(avgImp / (1 - avgImp)) * 100
+            : ((1 - avgImp) / avgImp) * 100);
+        }
+      }
+
+      const betmgmImplied = americanToImplied(betmgmOdds);
+      
+      evBets.push({
+        player: playerName,
+        game: `${game.away_team} @ ${game.home_team}`,
+        betmgmOdds,
+        marketAvgOdds,
+        betmgmImplied,
+        trueProb,
+        evPct,
+        oddsByBook,
+        bestOdds: Number.isFinite(bestOdds) ? bestOdds : null,
+        isPositive: Number.isFinite(evPct) && evPct >= threshold * 100,
+        isFivePlusEv: Number.isFinite(evPct) && evPct >= highlightThresholdPct,
+        key: `${playerName}-${betmgmOdds}-${game.id}`
+      });
+    }
+  }
+  
+  evBets.sort((a, b) => {
+    const aPriority = a.isFivePlusEv ? 1 : 0;
+    const bPriority = b.isFivePlusEv ? 1 : 0;
+    if (aPriority !== bPriority) return bPriority - aPriority;
+
+    const aEv = Number.isFinite(a.evPct) ? a.evPct : -Infinity;
+    const bEv = Number.isFinite(b.evPct) ? b.evPct : -Infinity;
+    return bEv - aEv;
+  });
+  
+  const posCount = evBets.filter(b => b.isPositive).length;
+  sessionEvCount += posCount;
+  document.getElementById('stat-ev').textContent = sessionEvCount;
+  const booksSeen = [...new Set(evBets.flatMap(b => (b.oddsByBook || []).map(o => o.key)))];
+  
+  renderTable(evBets);
+  
+  const now = new Date().toLocaleTimeString();
+  document.getElementById('last-scan').textContent = `Last scan: ${now} — ${evBets.length} players found`;
+  
+  log(`Scan complete. ${evBets.length} players evaluated, ${posCount} +EV opportunities found. Books seen: ${booksSeen.join(', ') || 'none'}.`, posCount > 0 ? 'success' : 'info');
+  
+  for (const bet of evBets.filter(b => b.isPositive)) {
+    if (!lastAlertedKeys.has(bet.key)) {
+      lastAlertedKeys.add(bet.key);
+      const msg = [
+        `⚾ ${bet.player}`,
+        `${bet.game}`,
+        `BetMGM: ${bet.betmgmOdds > 0 ? '+' : ''}${bet.betmgmOdds}`,
+        `True Prob: ${(bet.trueProb * 100).toFixed(1)}%`,
+        `EV: +${bet.evPct.toFixed(1)}%`,
+        `Bet now at BetMGM Colorado!`
+      ].join('\n');
+      await sendPushover(`+EV HR Bet: ${bet.player}`, msg);
+    }
+  }
+  
+  updateStatus(`Active — ${posCount} +EV bets`, true);
+}
+
+function renderTable(bets) {
+  const tbody = document.getElementById('ev-tbody');
+  if (bets.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="icon">⚾</div><p>No home run props found for today's games.</p></div></td></tr>`;
+    return;
+  }
+  
+  tbody.innerHTML = bets.map(b => {
+    const hasEv = Number.isFinite(b.evPct);
+    const evClass = hasEv && b.evPct >= 0 ? 'ev-pos' : 'ev-neg';
+    const evSign = hasEv && b.evPct >= 0 ? '+' : '';
+    const rowStyle = b.isFivePlusEv ? 'background:rgba(61,240,160,0.10);' : '';
+    const statusBadge = !hasEv
+      ? `<span class="badge badge-warn">Waiting for market</span>`
+      : b.isFivePlusEv
+        ? `<span class="badge badge-green">+30% EV</span>`
+        : `<span class="badge badge-red">Below +30%</span>`;
+    return `
+      <tr style="${rowStyle}">
+        <td style="font-weight:500;">${b.player}${b.isFivePlusEv ? ' <span class="badge badge-green">+30% EV</span>' : ''}</td>
+        <td style="color:var(--muted);font-size:12px;">${b.game}</td>
+        <td>${renderSportsbookOdds(b.oddsByBook, b.bestOdds)}</td>
+        <td>${formatAmerican(b.betmgmOdds)} <span class="tag-betmgm">BetMGM</span></td>
+        <td>${b.marketAvgOdds !== null ? formatAmerican(b.marketAvgOdds) : '<span style="color:var(--muted);">—</span>'}</td>
+        <td>${(b.betmgmImplied * 100).toFixed(1)}%</td>
+        <td>${b.trueProb !== null ? `${(b.trueProb * 100).toFixed(1)}%` : '<span style="color:var(--muted);">—</span>'}</td>
+        <td class="ev-val ${evClass}">${hasEv ? `${evSign}${b.evPct.toFixed(1)}%` : '<span style="color:var(--muted);">N/A</span>'}</td>
+        <td>${statusBadge}</td>
+      </tr>`;
+  }).join('');
+}
+
+async function runOnceScan() {
+  if (!cfg('cfg-odds-key')) {
+    log('Please enter your Odds API key first.', 'error');
+    return;
+  }
+  await runScan();
+}
+
+function startTracker() {
+  if (!cfg('cfg-odds-key')) {
+    log('Please enter your Odds API key first.', 'error');
+    return;
+  }
+  const mins = parseInt(cfg('cfg-interval'));
+  
+  document.getElementById('btn-start').disabled = true;
+  document.getElementById('btn-stop').disabled = false;
+  
+  log(`Tracker started. Scanning every ${mins} minutes.`, 'success');
+  runScan();
+  
+  const intervalMs = mins * 60 * 1000;
+  scanInterval = setInterval(runScan, intervalMs);
+  
+  countdownSecs = mins * 60;
+  const countEl = document.getElementById('countdown');
+  countEl.style.display = 'inline-block';
+  countdownTimer = setInterval(() => {
+    countdownSecs--;
+    if (countdownSecs <= 0) countdownSecs = mins * 60;
+    const m = Math.floor(countdownSecs / 60);
+    const s = countdownSecs % 60;
+    countEl.textContent = `Next scan: ${m}:${s.toString().padStart(2,'0')}`;
+  }, 1000);
+}
+
+function stopTracker() {
+  if (scanInterval) { clearInterval(scanInterval); scanInterval = null; }
+  if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+  document.getElementById('countdown').style.display = 'none';
+  document.getElementById('btn-start').disabled = false;
+  document.getElementById('btn-stop').disabled = true;
+  updateStatus('Stopped', false);
+  log('Tracker stopped.', 'info');
+}
+</script>
+</body>
+</html>
