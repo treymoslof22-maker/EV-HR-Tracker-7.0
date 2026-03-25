@@ -61,6 +61,7 @@
   }
   .logo-text { font-weight: 700; font-size: 15px; letter-spacing: -0.3px; }
   .logo-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .header-meta { display:flex; align-items:center; gap:16px; }
 
   .status-dot {
     width: 7px; height: 7px; border-radius: 50%;
@@ -175,9 +176,10 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    overflow: hidden;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
-  .bet-table { width: 100%; border-collapse: collapse; }
+  .bet-table { width: 100%; min-width: 860px; border-collapse: collapse; }
   .bet-table th {
     background: var(--surface2);
     color: var(--muted);
@@ -291,6 +293,50 @@
   .tab.active { color: var(--text); border-bottom-color: var(--accent); }
 
   .section-divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+
+  @media (max-width: 768px) {
+    header {
+      padding: 12px 14px;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .header-meta {
+      width: 100%;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    main { padding: 14px 10px 20px; }
+    .notice { padding: 10px 12px; font-size: 12px; margin-bottom: 16px; }
+    .section { margin-bottom: 18px; }
+    .section-header { margin-bottom: 10px; }
+    .config-card { padding: 12px; }
+    .row-btns { gap: 8px; }
+    .row-btns .btn {
+      flex: 1 1 calc(50% - 8px);
+      justify-content: center;
+      min-height: 40px;
+      padding: 10px 12px;
+    }
+    .stat-card { padding: 12px; }
+    .stat-val { font-size: 22px; }
+    .bet-table th, .bet-table td {
+      padding: 9px 10px;
+      font-size: 12px;
+    }
+    .alert-log { max-height: 200px; }
+    .log-entry { padding: 8px 10px; }
+  }
+
+  @media (max-width: 480px) {
+    .logo-text { font-size: 14px; }
+    .logo-sub { font-size: 10px; }
+    .status-label, #status-display { font-size: 11px !important; }
+    .countdown { font-size: 11px; padding: 2px 6px; }
+    .row-btns .btn { flex: 1 1 100%; }
+    .book-odd { font-size: 10px; }
+  }
 </style>
 </head>
 <body>
@@ -303,7 +349,7 @@
       <div class="logo-sub">BetMGM Colorado · Home Run Props</div>
     </div>
   </div>
-  <div style="display:flex;align-items:center;gap:16px;">
+  <div class="header-meta">
     <span id="status-display" style="display:flex;align-items:center;font-size:12px;color:var(--muted);">
       <span class="status-dot" style="background:var(--muted);"></span> Idle
     </span>
