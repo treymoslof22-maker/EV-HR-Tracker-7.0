@@ -604,19 +604,10 @@ function getFirstNumber(value) {
   return m ? parseFloat(m[0]) : null;
 }
 
-function flattenNodes(root) {
-  const out = [];
-  const stack = Array.isArray(root) ? [...root] : [root];
-  while (stack.length) {
-    const cur = stack.pop();
-    if (!cur || typeof cur !== 'object') continue;
-    out.push(cur);
-    for (const value of Object.values(cur)) {
-      if (Array.isArray(value)) stack.push(...value);
-      else if (value && typeof value === 'object') stack.push(value);
-    }
-  }
-  return out;
+function readText(value) {
+  if (typeof value === 'string') return value;
+  if (!value || typeof value !== 'object') return '';
+  return value.value || value.name || value.label || value.description || '';
 }
 
 async function fetchBetmgmCdsFixtureOdds(fixtureId, fallbackAway = '', fallbackHome = '') {
@@ -642,42 +633,44 @@ async function fetchBetmgmCdsFixtureOdds(fixtureId, fallbackAway = '', fallbackH
   const res = await fetch(url.toString());
   if (!res.ok) throw new Error(`co.betmgm fixture-view ${res.status}`);
   const payload = await res.json();
-  const allNodes = flattenNodes(payload);
-  const hrMarkets = allNodes.filter(n => {
-    const text = `${n?.name || ''} ${n?.description || ''} ${n?.title || ''}`.toLowerCase();
+  const fixture = payload?.fixture || payload?.fixtures?.[0] || {};
+  const optionMarkets = Array.isArray(fixture?.optionMarkets)
+    ? fixture.optionMarkets
+    : (Array.isArray(payload?.optionMarkets) ? payload.optionMarkets : []);
+  const hrMarkets = optionMarkets.filter(market => {
+    const text = `${readText(market?.name)} ${readText(market?.description)} ${readText(market?.title)}`.toLowerCase();
     return /player\s+to\s+hit\s+a?\s+home\s+run/.test(text);
   });
 
   const parsedOutcomes = hrMarkets.flatMap(market => {
-    const candidates = [
-      ...(Array.isArray(market?.outcomes) ? market.outcomes : []),
-      ...(Array.isArray(market?.selections) ? market.selections : []),
-      ...(Array.isArray(market?.options) ? market.options : [])
-    ];
-    return candidates.map(sel => {
+    const options = Array.isArray(market?.options) ? market.options : [];
+    return options.map(option => {
+      const status = String(option?.status || '').toLowerCase();
+      if (status && status !== 'visible') return null;
+      const playerName = readText(option?.name) || readText(option?.participant) || readText(option?.description);
       const price = getFirstNumber(
-        sel?.price?.american
-        ?? sel?.odds?.american
-        ?? sel?.price?.us
-        ?? sel?.odds
-        ?? sel?.americanOdds
-        ?? sel?.value
+        option?.price?.americanOdds
+        ?? option?.price?.american
+        ?? option?.odds?.american
+        ?? option?.price?.us
+        ?? option?.odds
+        ?? option?.americanOdds
       );
       return {
-        name: sel?.name || sel?.label || 'Yes',
-        description: sel?.description || sel?.participant || sel?.name,
-        participant: sel?.participant || sel?.description || sel?.name,
-        point: Number.isFinite(parseFloat(sel?.line)) ? parseFloat(sel.line) : null,
+        name: 'Yes',
+        description: playerName,
+        participant: playerName,
+        point: Number.isFinite(parseFloat(option?.line)) ? parseFloat(option.line) : null,
         price
       };
-    }).filter(o => Number.isFinite(o.price) && isSingleHomeRunOutcome(o));
+    }).filter(o => o && o.participant && Number.isFinite(o.price) && isSingleHomeRunOutcome(o));
   });
 
   if (!parsedOutcomes.length) return null;
 
-  const fixtureNode = allNodes.find(n => String(n?.id || n?.fixtureId || '') === String(fixtureId)) || {};
-  const away = fixtureNode?.competitors?.[0]?.name || fixtureNode?.participants?.[0]?.name || fallbackAway;
-  const home = fixtureNode?.competitors?.[1]?.name || fixtureNode?.participants?.[1]?.name || fallbackHome;
+  const teamsFromName = readText(fixture?.name).split(/\s+at\s+/i).map(s => s.trim()).filter(Boolean);
+  const away = readText(fixture?.participants?.[0]?.name) || teamsFromName[0] || fallbackAway;
+  const home = readText(fixture?.participants?.[1]?.name) || teamsFromName[1] || fallbackHome;
 
   return {
     id: fixtureId,
