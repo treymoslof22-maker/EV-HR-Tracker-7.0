@@ -61,6 +61,7 @@
   }
   .logo-text { font-weight: 700; font-size: 15px; letter-spacing: -0.3px; }
   .logo-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .header-meta { display:flex; align-items:center; gap:16px; }
 
   .status-dot {
     width: 7px; height: 7px; border-radius: 50%;
@@ -175,9 +176,10 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    overflow: hidden;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
-  .bet-table { width: 100%; border-collapse: collapse; }
+  .bet-table { width: 100%; min-width: 860px; border-collapse: collapse; }
   .bet-table th {
     background: var(--surface2);
     color: var(--muted);
@@ -291,6 +293,50 @@
   .tab.active { color: var(--text); border-bottom-color: var(--accent); }
 
   .section-divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+
+  @media (max-width: 768px) {
+    header {
+      padding: 12px 14px;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .header-meta {
+      width: 100%;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    main { padding: 14px 10px 20px; }
+    .notice { padding: 10px 12px; font-size: 12px; margin-bottom: 16px; }
+    .section { margin-bottom: 18px; }
+    .section-header { margin-bottom: 10px; }
+    .config-card { padding: 12px; }
+    .row-btns { gap: 8px; }
+    .row-btns .btn {
+      flex: 1 1 calc(50% - 8px);
+      justify-content: center;
+      min-height: 40px;
+      padding: 10px 12px;
+    }
+    .stat-card { padding: 12px; }
+    .stat-val { font-size: 22px; }
+    .bet-table th, .bet-table td {
+      padding: 9px 10px;
+      font-size: 12px;
+    }
+    .alert-log { max-height: 200px; }
+    .log-entry { padding: 8px 10px; }
+  }
+
+  @media (max-width: 480px) {
+    .logo-text { font-size: 14px; }
+    .logo-sub { font-size: 10px; }
+    .status-label, #status-display { font-size: 11px !important; }
+    .countdown { font-size: 11px; padding: 2px 6px; }
+    .row-btns .btn { flex: 1 1 100%; }
+    .book-odd { font-size: 10px; }
+  }
 </style>
 </head>
 <body>
@@ -303,7 +349,7 @@
       <div class="logo-sub">BetMGM Colorado · Home Run Props</div>
     </div>
   </div>
-  <div style="display:flex;align-items:center;gap:16px;">
+  <div class="header-meta">
     <span id="status-display" style="display:flex;align-items:center;font-size:12px;color:var(--muted);">
       <span class="status-dot" style="background:var(--muted);"></span> Idle
     </span>
@@ -343,7 +389,7 @@
       <div class="config-grid">
         <div class="field">
           <label>Odds API Key</label>
-          <input type="password" id="cfg-odds-key" value="91ec431ed0b88f3d8e48b719db1ae368" autocomplete="off" readonly>
+          <input type="password" id="cfg-odds-key" value="e623af1dfef2189972eb71b0a7ebd797" autocomplete="off" readonly>
         </div>
         <div class="field">
           <label>Pushover User Key</label>
@@ -359,15 +405,15 @@
         </div>
         <div class="field">
           <label>+EV Alert Threshold (%)</label>
-          <input type="number" id="cfg-threshold" value="30" min="0" max="30" step="0.5">
+          <input type="number" id="cfg-threshold" value="50" min="0" max="50" step="0.5">
         </div>
         <div class="field">
           <label>Poll Interval (minutes)</label>
           <select id="cfg-interval">
             <option value="5">Every 5 minutes</option>
-            <option value="10" selected>Every 10 minutes</option>
+            <option value="10">Every 10 minutes</option>
             <option value="15">Every 15 minutes</option>
-            <option value="30">Every 30 minutes</option>
+            <option value="30" selected>Every 30 minutes</option>
           </select>
         </div>
         <div class="field">
@@ -463,9 +509,11 @@ let sessionAlerts = 0;
 let sessionReqs = 0;
 let lastAlertedKeys = new Set();
 const CLOUDFLARE_WORKER_URL = 'https://super-art-7372.treymoslof22.workers.dev/';
-const ODDS_API_KEY = '91ec431ed0b88f3d8e48b719db1ae368';
+const ODDS_API_KEY = 'e623af1dfef2189972eb71b0a7ebd797';
 const PUSHOVER_APP_TOKEN = 'az6pk9ipdjj11rqkz7x1kfi28f9ppk';
 const PUSHOVER_USER_KEY = 'u8s29a84uwrrtidoieqj1izetdeq59';
+const BETMGM_CDS_ACCESS_ID = 'OTU4NDk3MzEtOTAyNS00MjQzLWIxNWEtNTI2MjdhNWM3Zjk3';
+const BETMGM_CDS_SUBDIVISION = 'US-Colorado';
 const TRACKED_BOOKMAKERS = ['betmgm', 'fanduel', 'draftkings'];
 const SCRAPE_FALLBACK_BOOKMAKERS = ['fanduel', 'draftkings'];
 const HR_MARKET_KEYS = ['batter_home_runs', 'batter_home_runs_alternate'];
@@ -486,6 +534,14 @@ function isTrackedBook(book) {
 
 function matchupKey(awayTeam, homeTeam) {
   return `${(awayTeam || '').toLowerCase().trim()}@@${(homeTeam || '').toLowerCase().trim()}`;
+}
+
+function isHomeRunMarket(market) {
+  const key = (market?.key || '').toLowerCase();
+  if (HR_MARKET_KEYS.includes(key)) return true;
+
+  const text = `${market?.name || ''} ${market?.description || ''} ${market?.title || ''}`.toLowerCase();
+  return /player\s+to\s+hit\s+a?\s+home\s+run/.test(text) || /to\s+hit\s+a?\s+home\s+run/.test(text);
 }
 
 function isSingleHomeRunOutcome(outcome) {
@@ -572,6 +628,111 @@ async function fetchWithRateLimitRetry(url, contextLabel, maxAttempts = 4) {
   throw new Error(`Odds API rate-limit retry failed${contextLabel ? ` for ${contextLabel}` : ''}: ${lastErrorText}`);
 }
 
+function extractBetmgmFixtureId(event = {}) {
+  const candidates = [
+    event?.fixtureId,
+    event?.fixture_id,
+    event?.id,
+    event?.event_id,
+    event?.metadata?.fixtureId
+  ];
+  const match = candidates
+    .map(v => String(v || ''))
+    .map(v => v.match(/\d{6,}/)?.[0] || '')
+    .find(Boolean);
+  return match || null;
+}
+
+function getFirstNumber(value) {
+  if (Number.isFinite(parseFloat(value))) return parseFloat(value);
+  const text = String(value || '');
+  const m = text.match(/-?\d+(\.\d+)?/);
+  return m ? parseFloat(m[0]) : null;
+}
+
+function readText(value) {
+  if (typeof value === 'string') return value;
+  if (!value || typeof value !== 'object') return '';
+  return value.value || value.name || value.label || value.description || '';
+}
+
+async function fetchBetmgmCdsFixtureOdds(fixtureId, fallbackAway = '', fallbackHome = '') {
+  if (!fixtureId) return null;
+  const url = new URL('https://www.co.betmgm.com/cds-api/bettingoffer/fixture-view');
+  url.searchParams.set('x-bwin-accessid', BETMGM_CDS_ACCESS_ID);
+  url.searchParams.set('lang', 'en-us');
+  url.searchParams.set('country', 'US');
+  url.searchParams.set('userCountry', 'US');
+  url.searchParams.set('subdivision', BETMGM_CDS_SUBDIVISION);
+  url.searchParams.set('offerMapping', 'All');
+  url.searchParams.set('scoreboardMode', 'Full');
+  url.searchParams.set('fixtureIds', fixtureId);
+  url.searchParams.set('state', 'Latest');
+  url.searchParams.set('includePrecreatedBetBuilder', 'true');
+  url.searchParams.set('supportVirtual', 'false');
+  url.searchParams.set('isBettingInsightsEnabled', 'true');
+  url.searchParams.set('useRegionalisedConfiguration', 'true');
+  url.searchParams.set('includeRelatedFixtures', 'false');
+  url.searchParams.set('statisticsModes', 'All');
+  url.searchParams.set('firstMarketGroupOnly', 'false');
+
+  const res = await fetch(url.toString());
+  if (!res.ok) throw new Error(`co.betmgm fixture-view ${res.status}`);
+  const payload = await res.json();
+  const fixture = payload?.fixture || payload?.fixtures?.[0] || {};
+  const optionMarkets = Array.isArray(fixture?.optionMarkets)
+    ? fixture.optionMarkets
+    : (Array.isArray(payload?.optionMarkets) ? payload.optionMarkets : []);
+  const hrMarkets = optionMarkets.filter(market => {
+    const text = `${readText(market?.name)} ${readText(market?.description)} ${readText(market?.title)}`.toLowerCase();
+    return /player\s+to\s+hit\s+a?\s+home\s+run/.test(text);
+  });
+
+  const parsedOutcomes = hrMarkets.flatMap(market => {
+    const options = Array.isArray(market?.options) ? market.options : [];
+    return options.map(option => {
+      const status = String(option?.status || '').toLowerCase();
+      if (status && status !== 'visible') return null;
+      const playerName = readText(option?.name) || readText(option?.participant) || readText(option?.description);
+      const price = getFirstNumber(
+        option?.price?.americanOdds
+        ?? option?.price?.american
+        ?? option?.odds?.american
+        ?? option?.price?.us
+        ?? option?.odds
+        ?? option?.americanOdds
+      );
+      return {
+        name: 'Yes',
+        description: playerName,
+        participant: playerName,
+        point: Number.isFinite(parseFloat(option?.line)) ? parseFloat(option.line) : null,
+        price
+      };
+    }).filter(o => o && o.participant && Number.isFinite(o.price) && isSingleHomeRunOutcome(o));
+  });
+
+  if (!parsedOutcomes.length) return null;
+
+  const teamsFromName = readText(fixture?.name).split(/\s+at\s+/i).map(s => s.trim()).filter(Boolean);
+  const away = readText(fixture?.participants?.[0]?.name) || teamsFromName[0] || fallbackAway;
+  const home = readText(fixture?.participants?.[1]?.name) || teamsFromName[1] || fallbackHome;
+
+  return {
+    id: fixtureId,
+    away_team: away,
+    home_team: home,
+    bookmakers: [{
+      key: 'betmgm',
+      title: 'BetMGM Colorado',
+      markets: [{
+        key: 'batter_home_runs',
+        outcomes: parsedOutcomes
+      }]
+    }]
+  };
+}
+
 async function fetchBetmgmColoradoScrape() {
   const workerUrl = cfg('cfg-worker-url') || CLOUDFLARE_WORKER_URL;
   if (!workerUrl) return [];
@@ -585,7 +746,7 @@ async function fetchBetmgmColoradoScrape() {
     const payload = await res.json();
     const events = Array.isArray(payload?.events) ? payload.events : [];
 
-    return events
+    const baseEvents = events
       .map(event => ({
         id: event.id || `${event.away_team || 'away'}-${event.home_team || 'home'}`,
         away_team: event.away_team,
@@ -596,7 +757,7 @@ async function fetchBetmgmColoradoScrape() {
             key: 'betmgm',
             title: book.title || 'BetMGM Colorado',
             markets: (book.markets || [])
-              .filter(m => HR_MARKET_KEYS.includes(m?.key))
+              .filter(isHomeRunMarket)
               .map(m => ({
                 key: m.key,
                 outcomes: (m.outcomes || []).map(o => ({
@@ -611,6 +772,33 @@ async function fetchBetmgmColoradoScrape() {
           }))
       }))
       .filter(event => event.bookmakers.length > 0);
+
+    const enrichedEvents = [];
+    for (const event of baseEvents) {
+      const fixtureId = extractBetmgmFixtureId(event);
+      if (!fixtureId) {
+        enrichedEvents.push(event);
+        continue;
+      }
+
+      try {
+        const cdsEvent = await fetchBetmgmCdsFixtureOdds(fixtureId, event.away_team, event.home_team);
+        if (cdsEvent?.bookmakers?.length) {
+          enrichedEvents.push(cdsEvent);
+          log(`Loaded co.betmgm fixture-view odds for fixture ${fixtureId}.`, 'info');
+        } else {
+          enrichedEvents.push(event);
+          log(`No fixture-view HR outcomes for fixture ${fixtureId}; using scrape fallback.`, 'info');
+        }
+      } catch (fixtureErr) {
+        enrichedEvents.push(event);
+        log(`co.betmgm fixture-view failed for fixture ${fixtureId}: ${fixtureErr.message}`, 'error');
+      }
+
+      await sleep(120);
+    }
+
+    return enrichedEvents;
   } catch (e) {
     log(`BetMGM CO scrape failed: ${e.message}`, 'error');
     return [];
@@ -638,7 +826,7 @@ async function fetchScrapedBookmakerFallback(eventId) {
         key: normalizeBookKey(book),
         title: book.title || book.key,
         markets: (book.markets || [])
-          .filter(m => HR_MARKET_KEYS.includes(m?.key))
+          .filter(isHomeRunMarket)
           .map(m => ({
             key: m.key,
             outcomes: (m.outcomes || []).map(o => ({
@@ -698,13 +886,55 @@ async function fetchHROdds() {
     const eventOdds = await eventOddsRes.json();
     eventOdds.bookmakers = (eventOdds.bookmakers || []).filter(isTrackedBook);
 
-    const hasBetmgm = eventOdds.bookmakers.some(b => normalizeBookKey(b) === 'betmgm');
-    if (!hasBetmgm) {
-      const scrapedMatch = betmgmScrapeByMatchup.get(matchupKey(eventOdds.away_team, eventOdds.home_team));
-      if (scrapedMatch?.bookmakers?.length) {
-        eventOdds.bookmakers = [...eventOdds.bookmakers, ...scrapedMatch.bookmakers];
-        log(`Added co.betmgm scraped odds for ${eventOdds.away_team} @ ${eventOdds.home_team}.`, 'info');
+    const scrapedMatch = betmgmScrapeByMatchup.get(matchupKey(eventOdds.away_team, eventOdds.home_team));
+    const scrapedBetmgmBook = scrapedMatch?.bookmakers?.find(b => normalizeBookKey(b) === 'betmgm') || null;
+    const apiBetmgmBook = eventOdds.bookmakers.find(b => normalizeBookKey(b) === 'betmgm') || null;
+
+    if (scrapedBetmgmBook) {
+      const mergedMarkets = [];
+      const scrapedMarkets = (scrapedBetmgmBook.markets || []).filter(isHomeRunMarket);
+      const apiMarkets = (apiBetmgmBook?.markets || []).filter(isHomeRunMarket);
+      const marketKeys = [...new Set([...scrapedMarkets, ...apiMarkets].map(m => m.key || 'batter_home_runs'))];
+
+      for (const marketKey of marketKeys) {
+        const scrapedOutcomes = scrapedMarkets
+          .filter(m => (m.key || 'batter_home_runs') === marketKey)
+          .flatMap(m => m.outcomes || [])
+          .filter(isSingleHomeRunOutcome);
+        const apiOutcomes = apiMarkets
+          .filter(m => (m.key || 'batter_home_runs') === marketKey)
+          .flatMap(m => m.outcomes || [])
+          .filter(isSingleHomeRunOutcome);
+
+        const seenPlayers = new Set(scrapedOutcomes.map(o => normalizePlayerKey(getOutcomePlayerLabel(o))).filter(Boolean));
+        const mergedOutcomes = [...scrapedOutcomes];
+        for (const apiOutcome of apiOutcomes) {
+          const playerKey = normalizePlayerKey(getOutcomePlayerLabel(apiOutcome));
+          if (!playerKey || seenPlayers.has(playerKey)) continue;
+          mergedOutcomes.push(apiOutcome);
+          seenPlayers.add(playerKey);
+        }
+
+        if (mergedOutcomes.length > 0) {
+          mergedMarkets.push({
+            key: marketKey,
+            outcomes: mergedOutcomes
+          });
+        }
       }
+
+      const nonBetmgmBooks = eventOdds.bookmakers.filter(b => normalizeBookKey(b) !== 'betmgm');
+      eventOdds.bookmakers = [
+        ...nonBetmgmBooks,
+        {
+          key: 'betmgm',
+          title: 'BetMGM Colorado',
+          markets: mergedMarkets
+        }
+      ];
+      log(`Using co.betmgm scraped odds first for ${eventOdds.away_team} @ ${eventOdds.home_team}; Odds API fills missing players.`, 'info');
+    } else if (!apiBetmgmBook) {
+      log(`No BetMGM lines found from co.betmgm scrape or Odds API for ${eventOdds.away_team} @ ${eventOdds.home_team}.`, 'error');
     }
 
     const missingFallbackBooks = SCRAPE_FALLBACK_BOOKMAKERS.filter(bookKey =>
@@ -765,7 +995,7 @@ function normalizePlayerKey(label) {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
-    .replace(/\b(to\s+hit\s+a?\s*home\s*run|to\s+homer|to\s+record\s+a?\s*home\s*run|home\s*runs?|home\s*run)\b/g, ' ')
+    .replace(/\b(player\s+to\s+hit\s+a?\s*home\s*run|to\s+hit\s+a?\s*home\s*run|to\s+homer|to\s+record\s+a?\s*home\s*run|home\s*runs?|home\s*run)\b/g, ' ')
     .replace(/\b(yes|no|over|under|ou|o\/u|alt|alternate)\b/g, ' ')
     .replace(/\b\d+(\.\d+)?\+?\b/g, ' ')
     .replace(/[.'’`-]/g, '')
@@ -877,7 +1107,7 @@ async function runScan() {
       b.key !== 'betmgm' && !b.title?.toLowerCase().includes('betmgm')
     ) || [];
     
-    const hrMarketsBetMGM = betmgmBook.markets?.filter(m => HR_MARKET_KEYS.includes(m.key)) || [];
+    const hrMarketsBetMGM = betmgmBook.markets?.filter(isHomeRunMarket) || [];
     if (!hrMarketsBetMGM.length) continue;
     
     for (const outcome of hrMarketsBetMGM.flatMap(m => m.outcomes || []).filter(isSingleHomeRunOutcome)) {
@@ -898,7 +1128,7 @@ async function runScan() {
       const marketProbs = [];
       for (const book of otherBooks) {
         const candidateOutcomes = (book.markets || [])
-          .filter(m => HR_MARKET_KEYS.includes(m.key))
+          .filter(isHomeRunMarket)
           .flatMap(m => m.outcomes || [])
           .filter(isSingleHomeRunOutcome);
         if (!candidateOutcomes.length) continue;
