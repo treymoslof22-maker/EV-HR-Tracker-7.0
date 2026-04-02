@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HR +EV Tracker — BetMGM Colorado</title>
+<title>MLB Player Props +EV Tracker</title>
 <style>
   :root {
     --bg: #0d0f14;
@@ -345,8 +345,8 @@
   <div class="logo">
     <div class="logo-icon">HR</div>
     <div>
-      <div class="logo-text">HR +EV Tracker</div>
-      <div class="logo-sub">BetMGM Colorado · Home Run Props</div>
+      <div class="logo-text">MLB Props +EV Tracker</div>
+      <div class="logo-sub">Multi-book Home Run Props</div>
     </div>
   </div>
   <div class="header-meta">
@@ -360,7 +360,7 @@
 <main>
 
   <div class="notice">
-    <strong>Setup required:</strong> Enter your <a href="https://the-odds-api.com" target="_blank" style="color:var(--warn);">Odds API key</a> (free tier: 500 requests/month) and your <a href="https://pushover.net" target="_blank" style="color:var(--warn);">Pushover</a> User Key + App Token below. The tracker will poll MLB home run props every N minutes, calculate +EV vs. the market consensus line, and push an alert to your phone whenever BetMGM Colorado offers +EV above your threshold.
+    <strong>Setup required:</strong> Enter your <a href="https://the-odds-api.com" target="_blank" style="color:var(--warn);">Odds API key</a> (free tier: 500 requests/month) and your <a href="https://pushover.net" target="_blank" style="color:var(--warn);">Pushover</a> User Key + App Token below. The tracker polls MLB player props (runs, singles, doubles, triples, HRs, walks, total bases, hits+runs+RBIs, batter Ks, pitcher outs/Ks/walks) for FanDuel, DraftKings, BetMGM, Hard Rock, theScore Bet, and Fanatics.
   </div>
 
   <div class="grid-3">
@@ -372,7 +372,7 @@
     <div class="stat-card">
       <div class="stat-label">Alerts Sent</div>
       <div class="stat-val blue" id="stat-alerts">0</div>
-      <div class="stat-sub">Pushover notifications</div>
+      <div class="stat-sub">book +EV lines alerted</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">API Requests</div>
@@ -418,7 +418,7 @@
         </div>
         <div class="field">
           <label>Minimum Odds (American)</label>
-          <input type="number" id="cfg-min-odds" value="-150" step="5" placeholder="-150">
+          <input type="number" id="cfg-min-odds" value="-300" step="5" placeholder="-300">
         </div>
       </div>
       <div class="row-btns">
@@ -441,7 +441,7 @@
 
   <div class="section">
     <div class="section-header">
-      <span class="section-title">Live +EV Opportunities</span>
+      <span class="section-title">Live +EV Opportunities (All Tracked Books)</span>
       <span style="font-size:12px;color:var(--muted);" id="last-scan">Not yet scanned</span>
     </div>
     <div class="bet-table-wrap">
@@ -449,11 +449,12 @@
         <thead>
           <tr>
             <th>Player</th>
+            <th>Prop</th>
             <th>Game</th>
-            <th>Sportsbook Odds</th>
-            <th>BetMGM Odds</th>
+            <th>Best Odds</th>
+            <th>Book EV Breakdown</th>
             <th>Market Avg</th>
-            <th>BetMGM Implied</th>
+            <th>Best Book Implied</th>
             <th>True Prob</th>
             <th>EV%</th>
             <th>Status</th>
@@ -461,10 +462,10 @@
         </thead>
         <tbody id="ev-tbody">
           <tr>
-            <td colspan="9">
+            <td colspan="10">
               <div class="empty-state">
                 <div class="icon">⚾</div>
-                <p>Run a scan to see live home run prop odds from BetMGM Colorado.</p>
+                <p>Run a scan to see live MLB player props across all tracked sportsbooks.</p>
               </div>
             </td>
           </tr>
@@ -491,10 +492,10 @@
       <span class="section-title">How EV is Calculated</span>
     </div>
     <div class="config-card" style="font-size:13px;color:var(--muted);line-height:1.8;">
-      <p style="margin-bottom:10px;"><strong style="color:var(--text);">Step 1 — Consensus "true probability":</strong> We fetch HR To Score (anytime) props from all available sportsbooks via The Odds API. We remove vig from each book's line using the standard no-vig formula, then average those probabilities across all non-BetMGM books to get a market consensus true probability.</p>
-      <p style="margin-bottom:10px;"><strong style="color:var(--text);">Step 2 — BetMGM implied probability:</strong> We take BetMGM Colorado's raw American odds and convert them to implied probability (without removing vig).</p>
-      <p style="margin-bottom:10px;"><strong style="color:var(--text);">Step 3 — EV% formula:</strong> <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;color:var(--accent);">EV% = (TrueProb × Payout) − (1 − TrueProb)</code> where Payout is the decimal payout from BetMGM's line (e.g. +200 → 2.0x).</p>
-      <p><strong style="color:var(--text);">Step 4 — Alert:</strong> If EV% ≥ your threshold, a Pushover notification is sent to your phone with the player, odds, and EV%.</p>
+      <p style="margin-bottom:10px;"><strong style="color:var(--text);">Step 1 — Consensus "true probability":</strong> We fetch tracked MLB player prop lines and average implied probability across all tracked books and scraped fallbacks to build a market consensus probability.</p>
+      <p style="margin-bottom:10px;"><strong style="color:var(--text);">Step 2 — Book implied probability:</strong> We convert each book's raw American odds into implied probability.</p>
+      <p style="margin-bottom:10px;"><strong style="color:var(--text);">Step 3 — EV% formula:</strong> <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;color:var(--accent);">EV% = (TrueProb × Payout) − (1 − TrueProb)</code> where Payout is the decimal payout from that specific book's line (e.g. +200 → 2.0x).</p>
+      <p><strong style="color:var(--text);">Step 4 — Alerts:</strong> If a specific book line EV% meets your threshold, a Pushover notification is sent with player, book, odds, and EV%.</p>
     </div>
   </div>
 
@@ -514,9 +515,24 @@ const PUSHOVER_APP_TOKEN = 'az6pk9ipdjj11rqkz7x1kfi28f9ppk';
 const PUSHOVER_USER_KEY = 'u8s29a84uwrrtidoieqj1izetdeq59';
 const BETMGM_CDS_ACCESS_ID = 'OTU4NDk3MzEtOTAyNS00MjQzLWIxNWEtNTI2MjdhNWM3Zjk3';
 const BETMGM_CDS_SUBDIVISION = 'US-Colorado';
-const TRACKED_BOOKMAKERS = ['betmgm', 'fanduel', 'draftkings'];
-const SCRAPE_FALLBACK_BOOKMAKERS = ['fanduel', 'draftkings'];
-const HR_MARKET_KEYS = ['batter_home_runs', 'batter_home_runs_alternate'];
+const TRACKED_BOOKMAKERS = ['betmgm', 'fanduel', 'draftkings', 'hardrockbet', 'thescorebet', 'fanatics'];
+const SCRAPE_FALLBACK_BOOKMAKERS = ['fanduel', 'draftkings', 'hardrockbet', 'thescorebet', 'fanatics'];
+const PLAYER_PROP_MARKET_KEYS = [
+  'batter_runs_scored',
+  'batter_singles',
+  'batter_doubles',
+  'batter_triples',
+  'batter_home_runs',
+  'batter_home_runs_alternate',
+  'batter_walks',
+  'batter_total_bases',
+  'batter_hits_runs_rbis',
+  'batter_strikeouts',
+  'pitcher_outs',
+  'pitcher_strikeouts',
+  'pitcher_walks',
+  'pitcher_walks_allowed'
+];
 
 function normalizeBookKey(book) {
   const raw = `${book?.key || ''} ${book?.title || ''}`.toLowerCase();
@@ -524,6 +540,7 @@ function normalizeBookKey(book) {
   if (raw.includes('draftkings')) return 'draftkings';
   if (raw.includes('fanatics')) return 'fanatics';
   if (raw.includes('hard rock') || raw.includes('hardrock')) return 'hardrockbet';
+  if (raw.includes('the score') || raw.includes('thescore') || raw.includes('score bet')) return 'thescorebet';
   if (raw.includes('betmgm')) return 'betmgm';
   return (book?.key || '').toLowerCase();
 }
@@ -536,22 +553,36 @@ function matchupKey(awayTeam, homeTeam) {
   return `${(awayTeam || '').toLowerCase().trim()}@@${(homeTeam || '').toLowerCase().trim()}`;
 }
 
-function isHomeRunMarket(market) {
+function isTrackedPropMarket(market) {
   const key = (market?.key || '').toLowerCase();
-  if (HR_MARKET_KEYS.includes(key)) return true;
+  if (PLAYER_PROP_MARKET_KEYS.includes(key)) return true;
 
   const text = `${market?.name || ''} ${market?.description || ''} ${market?.title || ''}`.toLowerCase();
-  return /player\s+to\s+hit\s+a?\s+home\s+run/.test(text) || /to\s+hit\s+a?\s+home\s+run/.test(text);
+  return /(runs?\s+scored|singles?|doubles?|triples?|home\s*runs?|to\s+h(?:i|ie)t\s+a?\s*home\s*run|batter\s+walks?|total\s+bases?|hits?\s*\+\s*runs?\s*\+\s*rbis?|batter\s+strikeouts?|pitcher\s+outs?|pitcher\s+strikeouts?|pitcher\s+walks?)/.test(text);
 }
 
-function isSingleHomeRunOutcome(outcome) {
-  const point = parseFloat(outcome?.point);
-  if (Number.isFinite(point)) return point <= 0.5;
-
+function isSinglePropOutcome(outcome) {
   const text = `${outcome?.name || ''} ${outcome?.description || ''} ${outcome?.label || ''}`.toLowerCase();
-  if (/\b[2-9]\+\b/.test(text)) return false;
-  if (/(over|under)\s*[1-9]\.5/.test(text)) return false;
+  if (/(alternate|alt\s+line)/.test(text)) return false;
   return true;
+}
+
+function getPropType(market = {}) {
+  const key = String(market?.key || '').toLowerCase();
+  const text = `${market?.name || ''} ${market?.description || ''} ${market?.title || ''}`.toLowerCase();
+  if (key.includes('batter_runs_scored') || /\bruns?\s+scored\b/.test(text)) return 'Runs';
+  if (key.includes('batter_singles') || /\bsingles?\b/.test(text)) return 'Singles';
+  if (key.includes('batter_doubles') || /\bdoubles?\b/.test(text)) return 'Doubles';
+  if (key.includes('batter_triples') || /\btriples?\b/.test(text)) return 'Triples';
+  if (key.includes('home_runs') || /(to\s+h(?:i|ie)t\s+a?\s*home\s*run|home\s*runs?)/.test(text)) return 'Home Runs';
+  if (key.includes('batter_walks') || /\bbatter\s+walks?\b/.test(text)) return 'Batter Walks';
+  if (key.includes('batter_total_bases') || /\btotal\s+bases?\b/.test(text)) return 'Total Bases';
+  if (key.includes('hits_runs_rbis') || /\bhits?\s*\+\s*runs?\s*\+\s*rbis?\b/.test(text)) return 'Hits+Runs+RBIs';
+  if (key.includes('batter_strikeouts') || /\bbatter\s+strikeouts?\b/.test(text)) return 'Batter Strikeouts';
+  if (key.includes('pitcher_outs') || /\bpitcher\s+outs?\b/.test(text)) return 'Pitcher Outs';
+  if (key.includes('pitcher_strikeouts') || /\bpitcher\s+strikeouts?\b/.test(text)) return 'Pitcher Strikeouts';
+  if (key.includes('pitcher_walks') || /\bpitcher\s+walks?\b/.test(text)) return 'Pitcher Walks';
+  return 'Player Prop';
 }
 
 function cfg(id) { return document.getElementById(id).value.trim(); }
@@ -709,7 +740,7 @@ async function fetchBetmgmCdsFixtureOdds(fixtureId, fallbackAway = '', fallbackH
         point: Number.isFinite(parseFloat(option?.line)) ? parseFloat(option.line) : null,
         price
       };
-    }).filter(o => o && o.participant && Number.isFinite(o.price) && isSingleHomeRunOutcome(o));
+    }).filter(o => o && o.participant && Number.isFinite(o.price) && isSinglePropOutcome(o));
   });
 
   if (!parsedOutcomes.length) return null;
@@ -757,7 +788,7 @@ async function fetchBetmgmColoradoScrape() {
             key: 'betmgm',
             title: book.title || 'BetMGM Colorado',
             markets: (book.markets || [])
-              .filter(isHomeRunMarket)
+              .filter(isTrackedPropMarket)
               .map(m => ({
                 key: m.key,
                 outcomes: (m.outcomes || []).map(o => ({
@@ -766,7 +797,7 @@ async function fetchBetmgmColoradoScrape() {
                   participant: o.participant,
                   point: Number.isFinite(parseFloat(o.point)) ? parseFloat(o.point) : null,
                   price: parseFloat(o.price)
-                })).filter(o => Number.isFinite(o.price) && isSingleHomeRunOutcome(o))
+                })).filter(o => Number.isFinite(o.price) && isSinglePropOutcome(o))
               }))
               .filter(m => m.outcomes.length > 0)
           }))
@@ -826,7 +857,7 @@ async function fetchScrapedBookmakerFallback(eventId) {
         key: normalizeBookKey(book),
         title: book.title || book.key,
         markets: (book.markets || [])
-          .filter(isHomeRunMarket)
+          .filter(isTrackedPropMarket)
           .map(m => ({
             key: m.key,
             outcomes: (m.outcomes || []).map(o => ({
@@ -835,7 +866,7 @@ async function fetchScrapedBookmakerFallback(eventId) {
               participant: o.participant,
               point: Number.isFinite(parseFloat(o.point)) ? parseFloat(o.point) : null,
               price: parseFloat(o.price)
-            })).filter(o => Number.isFinite(o.price) && isSingleHomeRunOutcome(o))
+            })).filter(o => Number.isFinite(o.price) && isSinglePropOutcome(o))
           }))
           .filter(m => m.outcomes.length > 0)
       }))
@@ -854,7 +885,7 @@ async function fetchHROdds() {
   );
   
   const sport = 'baseball_mlb';
-  const market = HR_MARKET_KEYS.join(',');
+  const market = PLAYER_PROP_MARKET_KEYS.join(',');
   const region = 'us';
   const oddsFormat = 'american';
   
@@ -873,7 +904,7 @@ async function fetchHROdds() {
   const eventOddsPayloads = [];
 
   for (const event of events) {
-    const eventOddsUrl = `https://api.the-odds-api.com/v4/sports/${sport}/events/${event.id}/odds/?apiKey=${key}&regions=${region}&markets=${market}&oddsFormat=${oddsFormat}&bookmakers=betmgm,fanduel,draftkings`;
+    const eventOddsUrl = `https://api.the-odds-api.com/v4/sports/${sport}/events/${event.id}/odds/?apiKey=${key}&regions=${region}&markets=${market}&oddsFormat=${oddsFormat}&bookmakers=betmgm,fanduel,draftkings,hardrockbet,thescorebet,fanatics`;
     const eventOddsRes = await fetchWithRateLimitRetry(eventOddsUrl, `event ${event.id}`);
 
     sessionReqs++;
@@ -892,19 +923,19 @@ async function fetchHROdds() {
 
     if (scrapedBetmgmBook) {
       const mergedMarkets = [];
-      const scrapedMarkets = (scrapedBetmgmBook.markets || []).filter(isHomeRunMarket);
-      const apiMarkets = (apiBetmgmBook?.markets || []).filter(isHomeRunMarket);
+      const scrapedMarkets = (scrapedBetmgmBook.markets || []).filter(isTrackedPropMarket);
+      const apiMarkets = (apiBetmgmBook?.markets || []).filter(isTrackedPropMarket);
       const marketKeys = [...new Set([...scrapedMarkets, ...apiMarkets].map(m => m.key || 'batter_home_runs'))];
 
       for (const marketKey of marketKeys) {
         const scrapedOutcomes = scrapedMarkets
           .filter(m => (m.key || 'batter_home_runs') === marketKey)
           .flatMap(m => m.outcomes || [])
-          .filter(isSingleHomeRunOutcome);
+          .filter(isSinglePropOutcome);
         const apiOutcomes = apiMarkets
           .filter(m => (m.key || 'batter_home_runs') === marketKey)
           .flatMap(m => m.outcomes || [])
-          .filter(isSingleHomeRunOutcome);
+          .filter(isSinglePropOutcome);
 
         const seenPlayers = new Set(scrapedOutcomes.map(o => normalizePlayerKey(getOutcomePlayerLabel(o))).filter(Boolean));
         const mergedOutcomes = [...scrapedOutcomes];
@@ -965,8 +996,8 @@ async function fetchHROdds() {
   return eventOddsPayloads;
 }
 
-function calcEV(betmgmOdds, trueProb) {
-  const decimal = americanToDecimal(betmgmOdds);
+function calcEV(bookOdds, trueProb) {
+  const decimal = americanToDecimal(bookOdds);
   const payout = decimal - 1;
   return trueProb * payout - (1 - trueProb);
 }
@@ -1071,18 +1102,18 @@ async function sendPushover(title, message) {
 async function testPushover() {
   log('Sending test Pushover notification...', 'info');
   await sendPushover(
-    '⚾ HR +EV Tracker — Test',
-    'Your HR +EV Tracker is working correctly. You will receive alerts like this when BetMGM Colorado offers +EV home run props.'
+    '⚾ MLB Props +EV Tracker — Test',
+    'Your multi-book MLB prop EV tracker is working. You will receive alerts when any tracked sportsbook shows +EV.'
   );
 }
 
 async function runScan() {
   const threshold = parseFloat(cfg('cfg-threshold')) / 100;
   const minOdds = parseFloat(cfg('cfg-min-odds'));
-  const highlightThresholdPct = 30;
+  const highlightThresholdPct = 15;
   
   updateStatus('Scanning...', true);
-  log('Fetching MLB HR prop odds...', 'info');
+  log('Fetching MLB player prop odds...', 'info');
   
   let games;
   try {
@@ -1093,112 +1124,99 @@ async function runScan() {
     return;
   }
   
-  log(`Fetched ${games.length} games with HR props.`, 'info');
+  log(`Fetched ${games.length} games with tracked player props.`, 'info');
   
   const evBets = [];
   
   for (const game of games) {
-    const betmgmBook = game.bookmakers?.find(b =>
-      b.key === 'betmgm' || b.title?.toLowerCase().includes('betmgm')
-    );
-    if (!betmgmBook) continue;
-    
-    const otherBooks = game.bookmakers?.filter(b =>
-      b.key !== 'betmgm' && !b.title?.toLowerCase().includes('betmgm')
-    ) || [];
-    
-    const hrMarketsBetMGM = betmgmBook.markets?.filter(isHomeRunMarket) || [];
-    if (!hrMarketsBetMGM.length) continue;
-    
-    for (const outcome of hrMarketsBetMGM.flatMap(m => m.outcomes || []).filter(isSingleHomeRunOutcome)) {
-      const playerName = getOutcomePlayerLabel(outcome);
-      const targetPlayerKey = normalizePlayerKey(playerName);
-      const targetSide = getOutcomeSide(outcome);
-      const betmgmOdds = parseFloat(outcome.price);
-      const oddsByBook = [{
-        key: 'betmgm',
-        book: 'BetMGM',
-        odds: betmgmOdds
-      }];
+    const playerMarket = new Map();
+    const books = game.bookmakers || [];
 
-      if (!targetPlayerKey) continue;
-      
-      if (betmgmOdds < minOdds) continue;
-      
-      const marketProbs = [];
-      for (const book of otherBooks) {
-        const candidateOutcomes = (book.markets || [])
-          .filter(isHomeRunMarket)
-          .flatMap(m => m.outcomes || [])
-          .filter(isSingleHomeRunOutcome);
-        if (!candidateOutcomes.length) continue;
+    for (const book of books) {
+      if (!isTrackedBook(book)) continue;
+      const bookKey = normalizeBookKey(book);
+      const bookTitle = book.title || bookKey;
+      const candidateMarkets = (book.markets || []).filter(isTrackedPropMarket);
+      for (const market of candidateMarkets) {
+        const propType = getPropType(market);
+        const candidateOutcomes = (market.outcomes || []).filter(isSinglePropOutcome);
+        for (const outcome of candidateOutcomes) {
+        const player = getOutcomePlayerLabel(outcome);
+        const playerKey = normalizePlayerKey(player);
+        if (!playerKey) continue;
+        const side = getOutcomeSide(outcome) || 'yes';
+        const point = Number.isFinite(parseFloat(outcome?.point)) ? parseFloat(outcome.point) : null;
+        const pointKey = point === null ? 'na' : point.toFixed(1);
+        const rowKey = `${playerKey}::${propType}::${side}::${pointKey}`;
+        const odds = parseFloat(outcome.price);
+        if (!Number.isFinite(odds)) continue;
 
-        const matches = candidateOutcomes.filter(x => {
-          const bookPlayerKey = normalizePlayerKey(getOutcomePlayerLabel(x));
-          if (!bookPlayerKey || !playerKeysMatch(bookPlayerKey, targetPlayerKey)) return false;
-
-          const bookSide = getOutcomeSide(x);
-          if (targetSide && bookSide && targetSide !== bookSide) return false;
-          return true;
-        });
-        const o = matches.reduce((best, x) => {
-          const price = parseFloat(x.price);
-          if (!Number.isFinite(price)) return best;
-          if (!best) return x;
-          return price > parseFloat(best.price) ? x : best;
-        }, null);
-
-        if (o) {
-          const matchedOdds = parseFloat(o.price);
-          const imp = americanToImplied(matchedOdds);
-          marketProbs.push(imp);
-          oddsByBook.push({
-            key: normalizeBookKey(book),
-            book: book.title || book.key || 'Book',
-            odds: matchedOdds
+        if (!playerMarket.has(rowKey)) {
+          playerMarket.set(rowKey, {
+            player,
+            playerKey,
+            propType,
+            side,
+            point,
+            game: `${game.away_team} @ ${game.home_team}`,
+            eventId: game.id,
+            oddsByBook: []
           });
         }
-      }
 
-      const bestOdds = oddsByBook.reduce((best, entry) => {
-        if (!Number.isFinite(entry.odds)) return best;
-        if (!Number.isFinite(best)) return entry.odds;
-        return entry.odds > best ? entry.odds : best;
-      }, Number.NEGATIVE_INFINITY);
-
-      let trueProb = null;
-      let evPct = null;
-      let marketAvgOdds = null;
-
-      if (marketProbs.length >= 2) {
-        const avgVigProb = marketProbs.reduce((a, b) => a + b, 0) / marketProbs.length;
-        trueProb = avgVigProb / (1 + (avgVigProb - 0.5) * 0.05);
-        const ev = calcEV(betmgmOdds, trueProb);
-        evPct = ev * 100;
-
-        const avgImp = marketProbs.reduce((a,b)=>a+b,0)/marketProbs.length;
-        if (avgImp > 0) {
-          marketAvgOdds = Math.round(avgImp >= 0.5
-            ? -(avgImp / (1 - avgImp)) * 100
-            : ((1 - avgImp) / avgImp) * 100);
+        const row = playerMarket.get(rowKey);
+        const existing = row.oddsByBook.find(x => x.key === bookKey);
+        if (!existing || odds > existing.odds) {
+          if (existing) {
+            existing.odds = odds;
+            existing.book = bookTitle;
+          } else {
+            row.oddsByBook.push({ key: bookKey, book: bookTitle, odds });
+          }
         }
       }
+      }
+    }
 
-      const betmgmImplied = americanToImplied(betmgmOdds);
-      
+    for (const row of playerMarket.values()) {
+      const usableOdds = row.oddsByBook.filter(o => Number.isFinite(o.odds) && o.odds >= minOdds);
+      if (!usableOdds.length) continue;
+
+      const marketProbs = usableOdds.map(o => americanToImplied(o.odds));
+      if (marketProbs.length < 2) continue;
+
+      const avgImp = marketProbs.reduce((a, b) => a + b, 0) / marketProbs.length;
+      const trueProb = avgImp / (1 + (avgImp - 0.5) * 0.05);
+
+      const bookEvs = usableOdds.map(o => {
+        const evPct = calcEV(o.odds, trueProb) * 100;
+        return { ...o, implied: americanToImplied(o.odds), evPct };
+      }).sort((a, b) => b.evPct - a.evPct);
+
+      const bestBook = bookEvs[0] || null;
+      const bestOdds = bestBook?.odds ?? null;
+      const bestEvPct = bestBook?.evPct ?? null;
+      const marketAvgOdds = avgImp > 0
+        ? Math.round(avgImp >= 0.5
+          ? -(avgImp / (1 - avgImp)) * 100
+          : ((1 - avgImp) / avgImp) * 100)
+        : null;
+
       evBets.push({
-        player: playerName,
-        game: `${game.away_team} @ ${game.home_team}`,
-        betmgmOdds,
+        player: row.player,
+        propType: row.propType,
+        point: row.point,
+        game: row.game,
         marketAvgOdds,
-        betmgmImplied,
         trueProb,
-        evPct,
-        oddsByBook,
-        bestOdds: Number.isFinite(bestOdds) ? bestOdds : null,
-        isPositive: Number.isFinite(evPct) && evPct >= threshold * 100,
-        isFivePlusEv: Number.isFinite(evPct) && evPct >= highlightThresholdPct,
-        key: `${playerName}-${betmgmOdds}-${game.id}`
+        oddsByBook: bookEvs,
+        bestOdds,
+        bestBook,
+        bestBookImplied: bestBook?.implied ?? null,
+        evPct: bestEvPct,
+        isPositive: Number.isFinite(bestEvPct) && bestEvPct >= threshold * 100,
+        isFivePlusEv: Number.isFinite(bestEvPct) && bestEvPct >= highlightThresholdPct,
+        key: `${row.playerKey}-${row.propType}-${row.side}-${row.point ?? 'na'}-${row.eventId}-${bestBook?.key || 'none'}-${bestOdds || 0}`
       });
     }
   }
@@ -1231,10 +1249,11 @@ async function runScan() {
       const msg = [
         `⚾ ${bet.player}`,
         `${bet.game}`,
-        `BetMGM: ${bet.betmgmOdds > 0 ? '+' : ''}${bet.betmgmOdds}`,
+        `Best Book: ${bet.bestBook?.book || 'N/A'}`,
+        `Odds: ${bet.bestOdds > 0 ? '+' : ''}${bet.bestOdds}`,
         `True Prob: ${(bet.trueProb * 100).toFixed(1)}%`,
         `EV: +${bet.evPct.toFixed(1)}%`,
-        `Bet now at BetMGM Colorado!`
+        `Line shows +EV vs tracked market.`
       ].join('\n');
       await sendPushover(`+EV HR Bet: ${bet.player}`, msg);
     }
@@ -1243,10 +1262,23 @@ async function runScan() {
   updateStatus(`Active — ${posCount} +EV bets`, true);
 }
 
+function renderBookEvBreakdown(bookEvs = [], thresholdPct = 0) {
+  if (!bookEvs.length) return '<span style="color:var(--muted);">—</span>';
+  const best = bookEvs[0];
+  const evClass = best.evPct >= thresholdPct ? 'ev-pos' : 'ev-neg';
+  const evSign = best.evPct >= 0 ? '+' : '';
+  return `<div class="book-odds-list">
+    <span class="book-odd best">
+      <span class="book-name">${best.book}</span>
+      <span class="ev-val ${evClass}">${evSign}${best.evPct.toFixed(1)}%</span>
+    </span>
+  </div>`;
+}
+
 function renderTable(bets) {
   const tbody = document.getElementById('ev-tbody');
   if (bets.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="icon">⚾</div><p>No home run props found for today's games.</p></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state"><div class="icon">⚾</div><p>No tracked player props found for today's games.</p></div></td></tr>`;
     return;
   }
   
@@ -1258,16 +1290,17 @@ function renderTable(bets) {
     const statusBadge = !hasEv
       ? `<span class="badge badge-warn">Waiting for market</span>`
       : b.isFivePlusEv
-        ? `<span class="badge badge-green">+30% EV</span>`
-        : `<span class="badge badge-red">Below +30%</span>`;
+        ? `<span class="badge badge-green">High EV</span>`
+        : `<span class="badge badge-red">Low EV</span>`;
     return `
       <tr style="${rowStyle}">
-        <td style="font-weight:500;">${b.player}${b.isFivePlusEv ? ' <span class="badge badge-green">+30% EV</span>' : ''}</td>
+        <td style="font-weight:500;">${b.player}${b.isFivePlusEv ? ' <span class="badge badge-green">High EV</span>' : ''}</td>
+        <td style="color:var(--muted);font-size:12px;">${b.propType}${b.point !== null ? ` (${b.side.toUpperCase()} ${b.point})` : ''}</td>
         <td style="color:var(--muted);font-size:12px;">${b.game}</td>
         <td>${renderSportsbookOdds(b.oddsByBook, b.bestOdds)}</td>
-        <td>${formatAmerican(b.betmgmOdds)} <span class="tag-betmgm">BetMGM</span></td>
+        <td>${renderBookEvBreakdown(b.oddsByBook, 0)}</td>
         <td>${b.marketAvgOdds !== null ? formatAmerican(b.marketAvgOdds) : '<span style="color:var(--muted);">—</span>'}</td>
-        <td>${(b.betmgmImplied * 100).toFixed(1)}%</td>
+        <td>${b.bestBookImplied !== null ? `${(b.bestBookImplied * 100).toFixed(1)}%` : '<span style="color:var(--muted);">—</span>'}</td>
         <td>${b.trueProb !== null ? `${(b.trueProb * 100).toFixed(1)}%` : '<span style="color:var(--muted);">—</span>'}</td>
         <td class="ev-val ${evClass}">${hasEv ? `${evSign}${b.evPct.toFixed(1)}%` : '<span style="color:var(--muted);">N/A</span>'}</td>
         <td>${statusBadge}</td>
